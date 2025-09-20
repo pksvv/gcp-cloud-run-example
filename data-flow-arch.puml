@@ -1,0 +1,31 @@
+@startuml
+|Frontend|
+start
+:User uploads file;
+
+|Backend|
+:Receive file;
+note right: Data = JSON + PDF
+
+|Data|
+:Store in Google Cloud Storage;
+note right: Data Flow = File Upload
+
+|Backend|
+:Generate embeddings;
+note right: Data Flow = Vectors
+
+|Data|
+:Save embeddings in Supabase pgvector;
+
+|LLM|
+:Send query + context;
+note right: Data Flow = Prompt + Chunks
+
+|Backend|
+:Merge results;
+
+|Frontend|
+:Display response;
+stop
+@enduml

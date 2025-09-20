@@ -1,0 +1,31 @@
+@startuml
+title Finance Copilot - Component Architecture
+
+rectangle "👤 User (Business Analyst)" as User
+
+node "Frontend (React - Vercel)" as Frontend
+node "Backend (FastAPI + LangChain - Cloud Functions)" as Backend
+
+package "Data Layer" {
+  database "Supabase (Relational)" as RelDB
+  database "Supabase (pgvector)" as VecDB
+  folder "Google Cloud Storage" as GCS
+}
+
+package "LLM Layer" {
+  [Hugging Face API] as HF
+  [OpenAI API (Optional)] as OpenAI
+}
+
+User --> Frontend : Interact (Chat / Upload)
+Frontend --> Backend : HTTPS Requests (API Calls)
+Backend --> RelDB : Store/Retrieve\nUser Metadata, Workflows
+Backend --> VecDB : Store/Retrieve\nEmbeddings, Chunks
+Backend --> GCS : Upload/Fetch\nFiles, Docs
+Backend --> HF : Prompt + Context\n(Query LLM)
+Backend --> OpenAI : Prompt + Context\n(Optional)
+RelDB --> Backend : Relational Data
+VecDB --> Backend : Relevant Chunks
+GCS --> Backend : File Links / Content
+Backend --> Frontend : Responses / Insights
+@enduml
