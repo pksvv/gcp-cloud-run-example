@@ -1,0 +1,79 @@
+@startuml
+!theme aws-orange
+scale 3
+skinparam defaultFontSize 18
+skinparam activityFontSize 16
+skinparam swimlaneTitleFontSize 20
+skinparam noteTextAlignment center
+
+title Finance Copilot - End-to-End Flow with Swimlanes
+
+|#E6F3FF|👤 User (Business Analyst)|
+start
+:Upload Financial Document\n(PDF/Excel/CSV);
+:Ask Question via Chat\n"Analyze Q3 revenue trends";
+
+|#CCE5FF|Frontend (React - Vercel)|
+:Receive file upload;
+:Validate file format & size;
+:Display upload progress;
+:Send HTTPS request to backend;
+:Show loading spinner;
+
+|#B3D9FF|Backend (FastAPI + LangChain)|
+:Receive file & user query;
+:Extract text/data from document;
+if (Document type?) then (PDF)
+  :Extract using PyPDF2;
+elseif (Excel) then 
+  :Parse with pandas;
+elseif (CSV) then
+  :Load with pandas;
+endif
+:Split content into chunks;
+:Generate embeddings;
+
+|#99CCFF|Data Layer (Supabase + GCS)|
+fork
+  :Store document metadata\nin Supabase RelDB;
+fork again
+  :Save embeddings in\npgvector database;
+fork again
+  :Upload original file\nto Google Cloud Storage;
+end fork
+
+|#B3D9FF|Backend (FastAPI + LangChain)|
+:Query vector DB for\nrelevant chunks;
+:Build context from\nsimilar documents;
+:Prepare prompt with\nuser question + context;
+
+|#80BFFF|LLM Layer|
+if (Primary LLM available?) then (✅ Yes)
+  :Send prompt to\nHugging Face API;
+elseif (Fallback needed?) then (⚠️ Fallback)
+  :Send prompt to\nOpenAI API;
+endif
+:Generate financial insights\n& analysis;
+:Return structured response;
+
+|#B3D9FF|Backend (FastAPI + LangChain)|
+:Process LLM response;
+:Add metadata & source refs;
+:Format JSON response;
+
+|#CCE5FF|Frontend (React - Vercel)|
+:Receive API response;
+:Parse and validate data;
+:Render insights with\ncharts/tables/graphs;
+:Display source documents;
+
+|#E6F3FF|👤 User (Business Analyst)|
+:Review financial analysis;
+:Ask follow-up questions;
+if (Satisfied with results?) then (✅ Yes)
+  stop
+else (❌ No)
+  :Ask follow-up question;
+endif
+
+@enduml
